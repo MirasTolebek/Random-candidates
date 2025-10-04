@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Рандомайзер | Элегантный Дизайн</title>
+    <!-- Загрузка Tailwind CSS для стилизации -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Конфигурация Tailwind -->
+    <script>
+        tailwind.config = {
+            darkMode: 'media', 
+            theme: {
+                extend: {
+                    colors: {
+                        'tg-bg': 'var(--app-bg)',
+                        'tg-text': 'var(--tg-theme-text-color, #2c3e50)',
+                        'tg-hint': 'var(--tg-theme-hint-color, #7f8c8d)', 
+                        'tg-secondary-bg': 'var(--card-bg)', 
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'], 
+                    },
+                    borderRadius: {
+                        'xl': '1.5rem', 
+                        '2xl': '2.5rem',
+                        'lg': '1rem',
+                    }
+                },
+            }
+        }
+    </script>
+    <style>
+        /* ========================================================= */
+        /* MODERN ELEGANT STYLE (Dynamic, Soft Shadows, Animations)  */
+        /* ========================================================= */
+        
+        /* Цветовые переменные для светлой темы (Soft & Clean) */
+        :root {
+            --app-bg: #f5f7fa;               /* Очень светлый фон */
+            --card-bg: #ffffff;             /* Чистый белый для секций */
+            --accent-start: #5a5be2;         /* Элегантный сине-фиолетовый */
+            --accent-end: #8b5cf6;           /* Яркий пурпурный */
+            --tg-theme-text-color: #1f2937;  /* Почти черный текст */
+            --tg-theme-hint-color: #9ca3af;
+        }
+
+        /* Цветовые переменные для темной темы (Deep & Contrasty) */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --app-bg: #0d1117;               /* Глубокий темный фон */
+                --card-bg: #161b22;             /* Темные карточки */
+                --accent-start: #7c3aed;         /* Мягкий фиолетовый */
+                --accent-end: #3b82f6;           /* Яркий голубой */
+                --tg-theme-text-color: #e5e7eb;  /* Светлый текст */
+                --tg-theme-hint-color: #6b7280;
+            }
+        }
+
+        /* Ключевые кадры для анимации "тряски" кнопки/контейнера (Taptic Engine effect) */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-4px); }
+            40%, 80% { transform: translateX(4px); }
+        }
+
+        .animate-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* --- Анимация степпера (Горизонтальный Сдвиг цифр) --- */
+        /* Скрываем стандартные стрелки ввода */
+        #winnerCount::-webkit-outer-spin-button,
+        #winnerCount::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        #winnerCount {
+            -moz-appearance: textfield;
+            text-align: center;
+            transition: none;
+        }
+        
+        .stepper-value-container {
+            width: 64px; 
+            height: 44px; 
+            overflow: hidden; 
+            position: relative;
+        }
+        .stepper-value {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            font-weight: 700;
+            background-color: var(--app-bg);
+            border-radius: 0.5rem;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); 
+            transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.5, 1);
+        }
+
+        /* При нажатии + (increment): новая цифра справа, старая уходит влево */
+        .slide-right-exit { transform: translateX(-100%); } 
+        .slide-right-enter { transform: translateX(100%); } 
+
+        /* При нажатии - (decrement): новая цифра слева, старая уходит вправо */
+        .slide-left-exit { transform: translateX(100%); }
+        .slide-left-enter { transform: translateX(-100%); }
+
+        /* Базовые стили */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--app-bg); 
+            color: var(--tg-theme-text-color); 
+            transition: background-color 0.3s, color 0.3s;
+            padding: 0; 
+            min-height: 100vh;
+        }
+
+        /* Стиль для блоков */
+        .full-width-section {
+            background-color: var(--card-bg);
+            padding: 24px; 
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08); 
+            margin-bottom: 20px; 
+            border-radius: 1.5rem;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        
+        /* Стиль для полей ввода */
+        .input-style {
+            padding: 16px;
+            background-color: var(--app-bg); 
+            color: var(--tg-theme-text-color);
+            border: none;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); 
+            transition: all 0.3s;
+            resize: none;
+        }
+
+        .input-style:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-start) 50%, transparent); 
+        }
+
+        /* Стиль для кнопки с градиентом */
+        .button-gradient {
+            background-image: linear-gradient(45deg, var(--accent-start) 0%, var(--accent-end) 100%);
+            color: white;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); 
+        }
+
+        .button-gradient:active {
+            transform: scale(0.97); 
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Стиль для элементов-степперов (+1 / -1) */
+        .stepper-btn {
+            background-color: var(--accent-start);
+            color: white;
+            font-weight: bold;
+            width: 44px; 
+            height: 44px;
+            border-radius: 0.5rem;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        /* Убираем :active, так как будем менять opacity в JS для состояния лимита */
+        .stepper-btn:not([disabled]):active {
+            transform: scale(0.95);
+        }
+
+        /* Стиль для результата (для анимации) */
+        .result-item {
+            padding: 16px 20px;
+            font-weight: 700;
+            background-color: var(--app-bg); 
+            border: 1px solid var(--tg-theme-hint-color);
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); 
+        }
+        
+        /* Стиль для самого яркого победителя */
+        .result-highlight {
+             background-color: var(--accent-start);
+             background-image: linear-gradient(to right, var(--accent-start) 0%, var(--accent-end) 100%);
+             color: white;
+             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+             transform: scale(1.0);
+        }
+
+        .app-container {
+            padding: 20px 16px;
+        }
+    </style>
+</head>
+<body class="bg-tg-bg text-tg-text flex flex-col items-center min-h-screen">
+
+    <div class="w-full mx-auto space-y-4 app-container">
+        <h1 class="text-3xl font-extrabold text-center mb-6 text-tg-text">✨ Генератор Судьбы</h1>
+
+        <!-- Блок ввода данных -->
+        <div class="full-width-section space-y-3">
+            <label for="candidatesInput" class="text-base section-header">
+                Список участников/опций:
+            </label>
+            <textarea id="candidatesInput" rows="8" class="input-style w-full rounded-xl" 
+                      placeholder="Мақсат
+Азамат
+Гүльнар
+..."></textarea>
+            <p id="candidateCountMsg" class="text-xs text-tg-hint pt-1">Введите не менее двух пунктов. Всего: 0</p>
+        </div>
+
+        <!-- Блок выбора количества победителей -->
+        <div class="full-width-section flex items-center justify-between">
+            <label for="winnerCount" class="text-base section-header">
+                Количество выбираемых победителей:
+            </label>
+            <!-- Добавляем контрол с кнопками -->
+            <div class="flex items-center space-x-2">
+                <button id="decrementBtn" class="stepper-btn" disabled>-</button>
+                
+                <!-- Контейнер для анимации сдвига -->
+                <div id="stepperContainer" class="stepper-value-container">
+                    <div id="stepperValue" class="stepper-value">1</div>
+                    <input type="number" id="winnerCount" value="1" min="1" class="absolute inset-0 opacity-0 cursor-default">
+                </div>
+                
+                <button id="incrementBtn" class="stepper-btn">+</button>
+            </div>
+        </div>
+
+        <!-- Кнопка рандома -->
+        <div class="px-0 pt-2 pb-2">
+            <button id="randomizeButton" class="button-gradient w-full py-5 text-xl font-bold rounded-2xl">
+                Выбрать Случайным Образом!
+            </button>
+        </div>
+
+        <!-- Блок результатов -->
+        <div id="resultsContainer" class="full-width-section space-y-4 hidden pb-10" style="opacity: 0; transform: translateY(10px);">
+            <h2 id="resultsTitle" class="text-2xl section-header">Результат:</h2>
+            <div id="resultsList" class="space-y-3">
+                <!-- Результаты будут добавлены сюда -->
+            </div>
+            <!-- Обновленное сообщение об ошибке (оставлено как запасной вариант) -->
+            <p id="errorMessage" class="text-base text-red-500 hidden pt-2 font-extrabold"></p>
+        </div>
+    </div>
+
+    <!-- Toast Notification for Errors -->
+    <div id="toastNotification" class="fixed bottom-0 left-1/2 transform -translate-x-1/2 mb-4 p-4 max-w-xs w-full bg-red-600 text-white font-semibold rounded-xl shadow-2xl transition-all duration-300 z-50 opacity-0 invisible" style="transform: translate(-50%, 100px);">
+        <p id="toastMessage"></p>
+    </div>
+
+    <script>
+        // Инициализация элементов DOM (используем let для stepperValue)
+        const candidatesInput = document.getElementById('candidatesInput');
+        const winnerCountInput = document.getElementById('winnerCount'); 
+        const randomizeButton = document.getElementById('randomizeButton');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsList = document.getElementById('resultsList');
+        const errorMessage = document.getElementById('errorMessage');
+        const decrementBtn = document.getElementById('decrementBtn');
+        const incrementBtn = document.getElementById('incrementBtn');
+        const candidateCountMsg = document.getElementById('candidateCountMsg');
+        const toastNotification = document.getElementById('toastNotification');
+        const toastMessage = document.getElementById('toastMessage');
+        const stepperContainer = document.getElementById('stepperContainer');
+        let stepperValue = document.getElementById('stepperValue'); 
+        
+        let maxCandidates = 0;
+
+        /**
+         * Управляет всплывающим уведомлением об ошибке (Toast/Snackbar)
+         */
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toastNotification.classList.remove('invisible', 'opacity-0');
+            toastNotification.style.transform = 'translate(-50%, 0)'; 
+
+            setTimeout(() => {
+                toastNotification.style.transform = 'translate(-50%, 100px)'; 
+                setTimeout(() => {
+                    toastNotification.classList.add('invisible', 'opacity-0');
+                }, 300);
+            }, 3000);
+        }
+
+        /**
+         * Обновляет счетчик участников и динамически устанавливает лимит для победителей.
+         * Также управляет состоянием кнопок +/-.
+         */
+        function updateMaxWinnerCount() {
+            const allCandidates = candidatesInput.value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0); 
+            
+            const uniqueCandidates = [...new Set(allCandidates)];
+            maxCandidates = uniqueCandidates.length;
+
+            candidateCountMsg.textContent = `Введите не менее двух пунктов. Всего: ${maxCandidates}`;
+
+            let currentVal = parseInt(winnerCountInput.value, 10);
+            
+            if (isNaN(currentVal) || currentVal < 1) {
+                currentVal = 1;
+            }
+
+            // Автоматический сброс значения, если оно превышает максимум
+            if (maxCandidates > 0 && currentVal > maxCandidates) {
+                currentVal = maxCandidates; // Сбрасываем к максимальному значению
+            }
+
+            winnerCountInput.value = currentVal;
+            stepperValue.textContent = currentVal; // Обновляем видимый элемент
+            
+            // Обновление состояния кнопки минус (используем disabled)
+            decrementBtn.disabled = currentVal <= 1;
+            
+            // Обновление состояния кнопки плюс (визуально, чтобы клик всегда проходил)
+            if (maxCandidates > 0 && currentVal >= maxCandidates) {
+                incrementBtn.style.opacity = '0.5';
+                incrementBtn.style.transform = 'none'; // Убираем эффект нажатия
+            } else {
+                incrementBtn.style.opacity = '1';
+                // Возвращаем эффект нажатия через CSS-класс :active
+            }
+        }
+        
+        /**
+         * Функция для выполнения анимации сдвига цифры
+         * @param {number} delta - Изменение (+1 или -1)
+         */
+        function animateStepper(delta) {
+            
+            const oldValue = parseInt(winnerCountInput.value, 10);
+            let newValue = oldValue + delta;
+
+            // Валидация: не даем выйти за 1
+            if (newValue < 1) newValue = 1;
+            
+            // Валидация: не даем выйти за maxCandidates 
+            if (maxCandidates > 0 && newValue > maxCandidates) {
+                newValue = maxCandidates; 
+            }
+            
+            if (newValue === oldValue) return; 
+
+            // Определяем класс анимации (горизонтальный сдвиг)
+            const directionClass = delta > 0 ? 'slide-right' : 'slide-left';
+            
+            // 1. Создаем новый элемент для новой цифры
+            const newStepperValue = document.createElement('div');
+            newStepperValue.className = `stepper-value ${directionClass}-enter`;
+            newStepperValue.textContent = newValue;
+
+            // 2. Устанавливаем текущее значение на класс для ухода
+            const oldStepperValue = stepperValue; 
+            oldStepperValue.classList.add(`${directionClass}-exit`);
+            
+            // 3. Добавляем новый элемент в DOM
+            stepperContainer.appendChild(newStepperValue);
+
+            // 4. Запускаем анимацию 
+            setTimeout(() => {
+                // Включаем CSS transition
+                oldStepperValue.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.8, 0.5, 1)';
+                newStepperValue.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.8, 0.5, 1)';
+                
+                // Запускаем анимацию сдвига
+                newStepperValue.classList.remove(`${directionClass}-enter`);
+                newStepperValue.style.transform = 'translateX(0)';
+            }, 50);
+
+            // 5. Обновляем реальное значение input
+            winnerCountInput.value = newValue;
+
+            // 6. Завершение анимации и замена элементов
+            setTimeout(() => {
+                // Удаляем старый элемент
+                oldStepperValue.remove();
+                
+                // Делаем новый элемент основным и обновляем глобальную ссылку!
+                newStepperValue.id = 'stepperValue';
+                newStepperValue.classList.remove(`${directionClass}-enter`, `${directionClass}-exit`);
+                newStepperValue.style.transition = ''; 
+                
+                // !!! Обновляем глобальную переменную
+                stepperValue = newStepperValue; 
+                
+                updateMaxWinnerCount(); // Обновляем состояние кнопок после завершения
+            }, 250); // Длительность анимации + запас
+        }
+
+        // Обработчики для кнопок
+        function incrementWinnerCount() {
+            // КРИТИЧЕСКИЙ ШАГ: Синхронизируем состояние, чтобы проверить лимит
+            updateMaxWinnerCount(); 
+
+            const currentVal = parseInt(winnerCountInput.value, 10);
+            
+            if (maxCandidates === 0) {
+                 showToast('❌ Сначала введите участников в список.');
+                 stepperContainer.classList.add('animate-shake');
+                 setTimeout(() => { stepperContainer.classList.remove('animate-shake'); }, 500);
+                 return;
+            }
+            
+            // ПРОВЕРКА ЛИМИТА: если текущее значение >= максимума, запускаем тряску и уведомление
+            if (currentVal >= maxCandidates) {
+                const message = `⚠️ Лимит! Максимум: ${maxCandidates}.`;
+                showToast(message);
+                
+                // Мгновенная тряска контейнера
+                stepperContainer.classList.add('animate-shake');
+                setTimeout(() => { stepperContainer.classList.remove('animate-shake'); }, 500);
+                return;
+            }
+            
+            animateStepper(1);
+        }
+
+        function decrementWinnerCount() {
+            animateStepper(-1);
+        }
+
+        // Обработчики для ручного ввода
+        function handleManualInput() {
+            // Запускаем полную проверку и обновление при ручном вводе
+            updateMaxWinnerCount();
+        }
+
+        /**
+         * Основная функция рандомизации и анимации.
+         */
+        function randomizeSelection() {
+            updateMaxWinnerCount(); 
+
+            // 1. Сбор и очистка данных
+            const allCandidates = candidatesInput.value
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0); 
+
+            const uniqueCandidates = [...new Set(allCandidates)];
+            
+            const numCandidates = uniqueCandidates.length;
+            let numWinners = parseInt(winnerCountInput.value, 10);
+            
+            // Сброс ошибок и подготовка к анимации
+            errorMessage.classList.add('hidden');
+            resultsList.innerHTML = '';
+            resultsContainer.style.opacity = '0';
+            resultsContainer.style.transform = 'translateY(10px)';
+            resultsContainer.classList.remove('animate-shake'); 
+            resultsContainer.classList.add('hidden'); 
+
+
+            // 2. Валидация
+            if (numCandidates < 2) { 
+                showToast('❌ Пожалуйста, введите как минимум два уникальных варианта.');
+                randomizeButton.classList.add('animate-shake');
+                setTimeout(() => { randomizeButton.classList.remove('animate-shake'); }, 500);
+                return;
+            }
+
+            if (isNaN(numWinners) || numWinners < 1) {
+                numWinners = 1; 
+                winnerCountInput.value = 1;
+                stepperValue.textContent = 1; 
+            }
+
+            // Повторная критическая валидация для кнопки "Выбрать"
+            if (numWinners > numCandidates) {
+                const message = `⚠️ Лимит превышен: запрошено ${numWinners}, но доступно только ${numCandidates} вариантов.`;
+                
+                resultsContainer.classList.remove('hidden'); 
+                resultsContainer.classList.add('animate-shake'); 
+                randomizeButton.classList.add('animate-shake');
+                showToast(message);
+
+                setTimeout(() => { 
+                    resultsContainer.classList.remove('animate-shake'); 
+                    randomizeButton.classList.remove('animate-shake');
+                }, 500);
+                return;
+            }
+
+            // 3. Алгоритм рандомизации
+            let candidatesToShuffle = [...uniqueCandidates];
+
+            for (let i = candidatesToShuffle.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [candidatesToShuffle[i], candidatesToShuffle[j]] = [candidatesToShuffle[j], candidatesToShuffle[i]];
+            }
+
+            const winners = candidatesToShuffle.slice(0, numWinners);
+
+            // 4. Подготовка контейнера
+            
+            resultsTitle.textContent = numWinners === 1 
+                ? 'Победитель:' 
+                : `Победители (${numWinners} чел.):`;
+                
+            // 4a. Создаем все элементы-плейсхолдеры и добавляем их в DOM.
+            const winnerElements = winners.map((winner, index) => {
+                const listItem = document.createElement('div');
+                let classes = "result-item rounded-xl transform opacity-0 translate-y-4";
+                
+                // Выделяем первого победителя или всех, если победитель один
+                if (numWinners > 1) {
+                   classes += index === 0 ? " result-highlight" : " bg-tg-secondary-bg shadow-md";
+                } else {
+                    classes += " result-highlight"; 
+                }
+                
+                listItem.className = `${classes}`;
+                listItem.textContent = winner;
+                return listItem;
+            });
+
+            winnerElements.forEach(el => resultsList.appendChild(el));
+            
+            // 4b. Показываем контейнер результатов и начинаем fade-in
+            resultsContainer.classList.remove('hidden');
+            resultsContainer.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+
+            setTimeout(() => {
+                resultsContainer.style.opacity = '1';
+                resultsContainer.style.transform = 'translateY(0)';
+            }, 50); 
+            
+            // 4c. Запускаем плавную прокрутку страницы: прокрутка к началу контейнера
+            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+
+            // 4d. Запуск каскадной анимации (staggered reveal)
+            const staggerDelay = 180;
+
+            winnerElements.forEach((listItem, index) => {
+                setTimeout(() => {
+                    listItem.classList.remove('opacity-0', 'translate-y-4'); 
+                    listItem.style.opacity = '1'; 
+                }, 300 + index * staggerDelay); 
+            });
+        }
+
+        // Привязка обработчиков
+        randomizeButton.addEventListener('click', randomizeSelection);
+        incrementBtn.addEventListener('click', incrementWinnerCount);
+        decrementBtn.addEventListener('click', decrementWinnerCount);
+        candidatesInput.addEventListener('input', updateMaxWinnerCount);
+        winnerCountInput.addEventListener('change', handleManualInput);
+        
+        // Инициализация
+        window.onload = () => {
+             // Удалили тестовые данные
+             candidatesInput.value = "";
+             updateMaxWinnerCount();
+        };
+    </script>
+</body>
+</html>
+
